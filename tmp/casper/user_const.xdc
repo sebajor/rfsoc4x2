@@ -1,0 +1,5 @@
+set_property PACKAGE_PIN AN11 [get_ports pl_clk_p]
+set_property IOSTANDARD LVDS [get_ports pl_clk_p]
+create_clock -period 8.138 -name pl_clk_p -waveform {0.000 4.069} [get_ports {pl_clk_p}]
+set_clock_groups -asynchronous -group [get_clocks clk_pl_0] -group [get_clocks pl_clk_mmcm]
+set_property -dict { PACKAGE_PIN AU10 IOSTANDARD LVCMOS18 } [get_ports { mmcm_locked }]
