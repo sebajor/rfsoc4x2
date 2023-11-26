@@ -6,7 +6,7 @@ FPGA_ARCH = rfsoc
 
 #files for synthesis
 SYN_FILES = rtl/fpga.v
-SYN_FILES += rtl/s_axi_lite_reg.v
+SYN_FILES += rtl/s_axil_reg.v
 SYN_FILES += rtl/async_true_dual_ram.v
 SYN_FILES += rtl/axil_bram_arbiter.v
 SYN_FILES += rtl/axil_bram.v
@@ -18,7 +18,24 @@ SYN_FILES += rtl/skid_buffer.v
 XDC_FILES = fpga.xdc
 #IP
 IP_TCL_FILES = ip/bd_design.tcl
-IP_TCL_FILES = ip/rfsoc4x2_mpsoc.tcl
+#IP_TCL_FILES = ip/rfsoc4x2_mpsoc.tcl
+
+
+##change locales
+#export LANG=en_US.UTF-8
+#export LC_CTYPE="en_US.UTF-8"
+#export LC_NUMERIC="en_US.UTF-8"
+#export LC_TIME="en_US.UTF-8"
+#export LC_COLLATE="en_US.UTF-8"
+#export LC_MONETARY="en_US.UTF-8"
+#export LC_MESSAGES="en_US.UTF-8"
+#export LC_PAPER="en_US.UTF-8"
+#export LC_NAME="en_US.UTF-8"
+#export LC_ADDRESS="en_US.UTF-8"
+#export LC_TELEPHONE="en_US.UTF-8"
+#export LC_MEASUREMENT="en_US.UTF-8"
+#export LC_IDENTIFICATION="en_US.UTF-8"
+#export LC_ALL=
 
 include ../common/vivado.mk
 

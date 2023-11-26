@@ -48,6 +48,10 @@ else
   XDC_FILES_REL = $(FPGA_TOP).xdc
 endif
 
+
+FPGA_TOP ?= fpga
+PROJECT ?= $(FPGA_TOP)
+
 ###################################################################
 # Main Targets
 #
@@ -57,7 +61,7 @@ endif
 
 all: fpga
 
-fpga: $(FPGA_TOP).bit
+fpga: $(PROJECT).bit
 
 tmpclean:
 	-rm -rf *.log *.jou *.cache *.hbs *.hw *.ip_user_files *.runs *.xpr *.html *.xml *.sim *.srcs *.str .Xil defines.v
@@ -74,11 +78,11 @@ distclean: clean
 ###################################################################
 
 # Vivado project file
-%.xpr: Makefile $(XCI_FILES_REL)
+$(PROJECT).xpr: Makefile $(XCI_FILES_REL)
 	rm -rf defines.v
 	touch defines.v
 	for x in $(DEFS); do echo '`define' $$x >> defines.v; done
-	echo "create_project -force -part $(FPGA_PART) $*" > create_project.tcl
+	echo "create_project -force -part $(FPGA_PART) $(PROJECT)" > create_project.tcl
 	echo "add_files -fileset sources_1 defines.v" >> create_project.tcl
 	for x in $(SYN_FILES_REL); do echo "add_files -fileset sources_1 $$x" >> create_project.tcl; done
 	for x in $(XDC_FILES_REL); do echo "add_files -fileset constrs_1 $$x" >> create_project.tcl; done
@@ -88,8 +92,8 @@ distclean: clean
 	vivado -nojournal -nolog -mode batch -source create_project.tcl
 
 # synthesis run
-%.runs/synth_1/%.dcp: %.xpr $(SYN_FILES_REL) $(INC_FILES_REL) $(XDC_FILES_REL)
-	echo "open_project $*.xpr" > run_synth.tcl
+$(PROJECT).runs/synth_1/$(PROJECT).dcp: $(PROJECT).xpr $(SYN_FILES_REL) $(INC_FILES_REL) $(XDC_FILES_REL)
+	echo "open_project $(PROJECT).xpr" > run_synth.tcl
 	echo "reset_run synth_1" >> run_synth.tcl
 	echo "launch_runs synth_1" >> run_synth.tcl
 	echo "wait_on_run synth_1" >> run_synth.tcl
@@ -97,8 +101,8 @@ distclean: clean
 	vivado -nojournal -nolog -mode batch -source run_synth.tcl
 
 # implementation run
-%.runs/impl_1/%_routed.dcp: %.runs/synth_1/%.dcp
-	echo "open_project $*.xpr" > run_impl.tcl
+$(PROJECT).runs/impl_1/$(PROJECT)_routed.dcp: $(PROJECT).runs/synth_1/$(PROJECT).dcp
+	echo "open_project $(PROJECT).xpr" > run_impl.tcl
 	echo "reset_run impl_1" >> run_impl.tcl
 	echo "launch_runs impl_1" >> run_impl.tcl
 	echo "wait_on_run impl_1" >> run_impl.tcl
@@ -106,17 +110,18 @@ distclean: clean
 	vivado -nojournal -nolog -mode batch -source run_impl.tcl
 
 # bit file
-%.bit: %.runs/impl_1/%_routed.dcp
-	echo "open_project $*.xpr" > generate_bit.tcl
+$(PROJECT).bit: $(PROJECT).runs/impl_1/$(PROJECT)_routed.dcp
+	echo "open_project $(PROJECT).xpr" > generate_bit.tcl
 	echo "open_run impl_1" >> generate_bit.tcl
-	echo "write_bitstream -force $*.bit" >> generate_bit.tcl
+	echo "set_property STEPS.WRITE_BITSTREAM.ARGS.BIN_FILE true [get_runs impl_1]" >> generate_bit.tcl
+	echo "write_bitstream -bin_file -force $(PROJECT).bit" >> generate_bit.tcl
 	echo "exit" >> generate_bit.tcl
 	vivado -nojournal -nolog -mode batch -source generate_bit.tcl
 	mkdir -p rev
 	EXT=bit; COUNT=100; \
-	while [ -e rev/$*_rev$$COUNT.$$EXT ]; \
+	while [ -e rev/$(PROJECT)_rev$$COUNT.bit ]; \
 	do COUNT=$$((COUNT+1)); done; \
-	cp $@ rev/$*_rev$$COUNT.$$EXT; \
-	echo "Output: rev/$*_rev$$COUNT.$$EXT";
+	cp -pv $(PROJECT).bin rev/$(PROJECT)_rev$$COUNT.bin; \
+	if [ -e $(PROJECT).runs/impl_1/$(PROJECT).ltx ]; then cp -pv $(PROJECT).runs/impl_1/$(PROJECT).ltx rev/$(PROJECT)_rev$$COUNT.ltx; fi
 	##copy the hwh
-	cp $(FPGA_TOP).srcs/sources_1/bd/system/hw_handoff/system.hwh rev/system.hwh
+	cp $(PROJECT).gen/sources_1/bd/system/hw_handoff/system.hwh rev/system.hwh

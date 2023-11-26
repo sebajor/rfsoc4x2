@@ -9,7 +9,7 @@ create_bd_design system
 create_bd_cell -type ip -vlnv xilinx.com:ip:zynq_ultra_ps_e:* mpsoc
 create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:* proc_sys_reset
 #source the standard configuration
-source rfsoc4x2_mpsoc.tcl
+source ../ip/rfsoc4x2_mpsoc.tcl
 create_bd_net pl_sys_clk
 connect_bd_net -net pl_sys_clk [get_bd_pins mpsoc/pl_clk0]
 create_bd_net pl_resetn
