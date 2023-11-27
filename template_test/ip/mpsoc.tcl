@@ -111,3 +111,6 @@ set_property -dict [list CONFIG.PSU__USE__M_AXI_GP2 {0}] [get_bd_cells mpsoc]
 
 ##set clock of the axi-lite interfaces
 set_property CONFIG.ASSOCIATED_BUSIF {HPM0_FPD_M00_axil:HPM0_FPD_M01_axil:HPM1_FPD_M00_axil:HPM1_FPD_M01_axil} [get_bd_ports /mpsoc_clk_150]
+make_wrapper -files [get_files $bd_dir/system.bd] -top
+import_files -force -norecurse $bd_dir/hdl/system_wrapper.v
+write_bd_tcl -force $cur_dir/rev/system.tcl

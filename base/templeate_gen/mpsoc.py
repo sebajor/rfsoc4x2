@@ -39,8 +39,11 @@ class tcl_generator():
             pin_clk = 'mpsoc_clk_%i'%self.config['mpsoc_clocks']['frequency'][i]
             if(clk_msg!=""):
                 self.file.write("set_property CONFIG.ASSOCIATED_BUSIF {%s} [get_bd_ports /%s]\n"%(clk_msg[:-1], pin_clk))
-
-
+        
+        ##generate the wrapper
+        self.file.write("make_wrapper -files [get_files $bd_dir/system.bd] -top\n")
+        self.file.write("import_files -force -norecurse $bd_dir/hdl/system_wrapper.v\n")
+        self.file.write("write_bd_tcl -force $cur_dir/rev/system.tcl\n")
         self.file.close()
 
 
