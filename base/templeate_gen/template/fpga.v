@@ -87,6 +87,7 @@ wire  [31:0] HPM1_FPD_M01_axil_wdata;
 wire HPM1_FPD_M01_axil_wready;
 wire  [3:0] HPM1_FPD_M01_axil_wstrb;
 wire HPM1_FPD_M01_axil_wvalid;
+wire axil_arst_n, axil_rst;
 
 
 system_wrapper system_wrapper_inst (
@@ -169,7 +170,9 @@ system_wrapper system_wrapper_inst (
 	.HPM1_FPD_M01_axil_wdata(HPM1_FPD_M01_axil_wdata),
 	.HPM1_FPD_M01_axil_wready(HPM1_FPD_M01_axil_wready),
 	.HPM1_FPD_M01_axil_wstrb(HPM1_FPD_M01_axil_wstrb),
-	.HPM1_FPD_M01_axil_wvalid(HPM1_FPD_M01_axil_wvalid)
+	.HPM1_FPD_M01_axil_wvalid(HPM1_FPD_M01_axil_wvalid),
+.axil_rst(axil_rst),
+.axil_arst_n(axil_arst_n)
 );
 
  axil_bram_unbalanced #(

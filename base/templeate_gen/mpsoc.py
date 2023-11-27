@@ -438,6 +438,7 @@ class verilog_generator():
                         msg += port_name+axi_name+";\n"
                         self.top_file.write(msg)
         ##TODO: add the rfdc signals
+        self.top_file.write("wire axil_arst_n, axil_rst;\n")
         ##create bd_design wrapper
         self.top_file.write("\n\nsystem_wrapper system_wrapper_inst (\n")
         if(self.config['mpsoc_clocks']['use']):
@@ -453,9 +454,8 @@ class verilog_generator():
                         msg = "\t."+port_name+axi_name+"("+port_name+axi_name+'),\n'
                         self.top_file.write(msg)
         ##TODO: rfdc signals
-        cur_pos = self.top_file.tell()
-        self.top_file.seek(cur_pos-2,0)
-        self.top_file.write("\n")
+        self.top_file.write(".axil_rst(axil_rst),\n")
+        self.top_file.write(".axil_arst_n(axil_arst_n)\n")
         self.top_file.write(");\n")
         
 
