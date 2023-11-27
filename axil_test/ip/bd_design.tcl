@@ -29,7 +29,7 @@ CONFIG.PSU__MAXIGP2__DATA_WIDTH {128} \
 ##here the ps uses the hpm0_fpd that has addr (0xA000_0000:0xA3ff_ffff). Actually this is the vcu address that overlaps the hpm0_fpd
 
 ##create interfaces
-connect_bd_net -net pl_sys_clk [get_bd_pins mpsoc/maxihpm0_fpd_aclk]
+connect_bd_net -net pl_sys_clk [get_bd_pins mpsoc/maxihpm0_fpd_aclk] ;#connect the clock wiht the interface of the hp0
 create_bd_port -dir O -type clk pl_sys_clk
 connect_bd_net -net pl_sys_clk [get_bd_ports pl_sys_clk]
 connect_bd_net -net pl_sys_clk [get_bd_pins proc_sys_reset/slowest_sync_clk]
