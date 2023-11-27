@@ -19,7 +19,9 @@ create_bd_net mpsoc_clk0
 connect_bd_net -net mpsoc_clk0 [get_bd_pins mpsoc/pl_clk0]
 create_bd_port -dir O -type clk mpsoc_clk_150
 connect_bd_net -net mpsoc_clk0 [get_bd_ports mpsoc_clk_150]
-set_property -dict [list CONFIG.FREQ_HZ {150000000}] [get_bd_ports mpsoc_clk_150]
+set freq0_mhz [get_property CONFIG.PSU__CRL_APB__PL0_REF_CTRL__ACT_FREQMHZ [get_bd_cells mpsoc]]
+set freq0_hz [expr $freq0_mhz*1e6]
+set_property -dict [list CONFIG.FREQ_HZ $freq0_hz] [get_bd_ports mpsoc_clk_150]
 #creating clock 1 
 set_property -dict [list CONFIG.PSU__FPGA_PL1_ENABLE {1}] [get_bd_cells mpsoc]
 set_property -dict [list CONFIG.PSU__CRL_APB__PL1_REF_CTRL__FREQMHZ {100.000000}] [get_bd_cells mpsoc]
@@ -27,7 +29,9 @@ create_bd_net mpsoc_clk1
 connect_bd_net -net mpsoc_clk1 [get_bd_pins mpsoc/pl_clk1]
 create_bd_port -dir O -type clk mpsoc_clk_100
 connect_bd_net -net mpsoc_clk1 [get_bd_ports mpsoc_clk_100]
-set_property -dict [list CONFIG.FREQ_HZ {100000000}] [get_bd_ports mpsoc_clk_100]
+set freq1_mhz [get_property CONFIG.PSU__CRL_APB__PL1_REF_CTRL__ACT_FREQMHZ [get_bd_cells mpsoc]]
+set freq1_hz [expr $freq1_mhz*1e6]
+set_property -dict [list CONFIG.FREQ_HZ $freq1_hz] [get_bd_ports mpsoc_clk_100]
 
 
 ##reseting systemcreate_bd_net pl_resetn

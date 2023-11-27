@@ -76,7 +76,10 @@ class tcl_generator():
                 self.file.write("create_bd_port -dir O -type clk mpsoc_clk_%i\n"%freq)
                 self.file.write("connect_bd_net -net mpsoc_clk%i [get_bd_ports mpsoc_clk_%i]\n"%(i,freq))
                 #set the frequency of the port accordingly
-                self.file.write("set_property -dict [list CONFIG.FREQ_HZ {%i}] [get_bd_ports mpsoc_clk_%i]\n"%(freq*1e6, freq))
+                ##first we need to get the actual freq that the mpsoc output
+                self.file.write("set freq%i_mhz [get_property CONFIG.PSU__CRL_APB__PL%i_REF_CTRL__ACT_FREQMHZ [get_bd_cells mpsoc]]\n"%(i,i))
+                self.file.write("set freq%i_hz [expr $freq%i_mhz*1e6]\n"%(i,i))
+                self.file.write("set_property -dict [list CONFIG.FREQ_HZ $freq%i_hz] [get_bd_ports mpsoc_clk_%i]\n"%(i, freq))
                 self.config['mpsoc_clocks']['clock_region'].append([])
 
 
