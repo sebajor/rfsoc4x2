@@ -1,4 +1,15 @@
-`default_nettype none
+//`default_nettype none
+//`include "async_true_dual_ram_read_first.v"
+//`include "async_true_dual_ram.v"
+//`include "async_true_dual_ram_write_first.v"
+//`include "axil_bram_arbiter.v"
+//`include "axil_bram_unbalanced.v"
+//`include "axil_bram.v"
+//`include "s_axil_reg.v"
+//`include "skid_buffer.v"
+//`include "unbalanced_ram.v"
+//`include "system_wrapper.v"
+
 
 //Top template
 module fpga (

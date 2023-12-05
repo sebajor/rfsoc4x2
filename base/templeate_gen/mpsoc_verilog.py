@@ -1,167 +1,7 @@
 from config import mpsoc
 import os
 import numpy as np
-
-class tcl_generator():
-
-    def __init__(self, config_obj, dest_folder='./template'):
-        os.makedirs(dest_folder, exist_ok=True)
-        #standard intialization
-        self.config = config_obj
-        self.file = open(os.path.join(dest_folder, 'mpsoc.tcl'), 'w')
-        self.standard_intialization()
-        ##the create_clocks create a clk net called mpsoc_clk%i 
-        ##the output ports are called mpsoc_clk_%f with f the freq in mhz
-        self.create_clocks()
-        
-        ##reset system, create the nets: pl_rstn, axil_rst and axil_rstn (uses the mpsoc_clk0 net)
-        ##the output ports are axil_rst, axil_arestn 
-        self.reset_system()
-        ##
-        self.hp_master_ports('HPM0_FPD')
-        self.hp_master_ports('HPM1_FPD')
-        self.hp_master_ports('HPM0_LPD')
-
-        self.hp_slaves("HPC0")
-        self.hp_slaves("HPC1")
-        self.hp_slaves("HP0")
-        self.hp_slaves("HP1")
-        self.hp_slaves("HP2")
-        self.hp_slaves("HP3")
-        self.hp_slaves("S_LPD")
-
-        self.file.write("\n##set clock of the axi-lite interfaces\n")
-        #set the clock region of the axil ports
-        for i, clk_region in enumerate(self.config['mpsoc_clocks']['clock_region']):
-            clk_msg = ""
-            for intf in clk_region:
-                clk_msg += intf+":"
-            pin_clk = 'mpsoc_clk_%i'%self.config['mpsoc_clocks']['frequency'][i]
-            if(clk_msg!=""):
-                self.file.write("set_property CONFIG.ASSOCIATED_BUSIF {%s} [get_bd_ports /%s]\n"%(clk_msg[:-1], pin_clk))
-        
-        ##generate the wrapper
-        self.file.write("make_wrapper -files [get_files $bd_dir/system.bd] -top\n")
-        self.file.write("import_files -force -norecurse $bd_dir/hdl/system_wrapper.v\n")
-        self.file.write("write_bd_tcl -force $cur_dir/rev/system.tcl\n")
-        self.file.close()
-
-
-
-
-    def standard_intialization(self):
-        self.file.write("set cur_dir [pwd]\n")
-        self.file.write("puts $cur_dir\n")
-        self.file.write("set bd_dir $cur_dir/fpga.srcs/sources_1/bd/system\n")
-        self.file.write("exec mkdir -p $cur_dir/rev\n\n")
-        self.file.write("create_bd_design system\n")
-        self.file.write("#instantiate ps\n")
-        self.file.write("create_bd_cell -type ip -vlnv xilinx.com:ip:zynq_ultra_ps_e:* mpsoc\n")
-        self.file.write("create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:* proc_sys_reset\n")
-        self.file.write("#source the standard configuration\n")
-        self.file.write("source ../ip/rfsoc4x2_mpsoc.tcl\n")
-
-        
-
-    def create_clocks(self):
-        if(self.config['mpsoc_clocks']['use']):
-            self.file.write("\n\n#mpsoc clocks generation\n") 
-            for i, freq in enumerate(self.config['mpsoc_clocks']['frequency']):
-                self.file.write("#creating clock %i \n"%i) 
-                self.file.write("set_property -dict [list CONFIG.PSU__FPGA_PL%i_ENABLE {1}] [get_bd_cells mpsoc]\n"%i)
-                self.file.write("set_property -dict [list CONFIG.PSU__CRL_APB__PL%i_REF_CTRL__FREQMHZ {%f}] [get_bd_cells mpsoc]\n"%(i,freq))
-                #create clock output port
-                self.file.write("create_bd_net mpsoc_clk%i\n"%i)
-                self.file.write("connect_bd_net -net mpsoc_clk%i [get_bd_pins mpsoc/pl_clk%i]\n"%(i,i))
-                self.file.write("create_bd_port -dir O -type clk mpsoc_clk_%i\n"%freq)
-                self.file.write("connect_bd_net -net mpsoc_clk%i [get_bd_ports mpsoc_clk_%i]\n"%(i,freq))
-                #set the frequency of the port accordingly
-                ##first we need to get the actual freq that the mpsoc output
-                self.file.write("set freq%i_mhz [get_property CONFIG.PSU__CRL_APB__PL%i_REF_CTRL__ACT_FREQMHZ [get_bd_cells mpsoc]]\n"%(i,i))
-                self.file.write("set freq%i_hz [expr $freq%i_mhz*1e6]\n"%(i,i))
-                self.file.write("set_property -dict [list CONFIG.FREQ_HZ $freq%i_hz] [get_bd_ports mpsoc_clk_%i]\n"%(i, freq))
-                self.config['mpsoc_clocks']['clock_region'].append([])
-
-
-    def reset_system(self):
-        self.file.write("\n\n##reseting system")
-        self.file.write("create_bd_net pl_resetn\n")
-        self.file.write("connect_bd_net -net pl_resetn [get_bd_pins mpsoc/pl_resetn0]\n")
-        self.file.write("create_bd_net axil_rst\n")
-        self.file.write("create_bd_net axil_arst_n\n")
-        ##connect the clock to the proc_sys_rst
-        self.file.write("connect_bd_net -net mpsoc_clk0 [get_bd_pins proc_sys_reset/slowest_sync_clk]\n")
-        ##make the resets external
-        self.file.write("connect_bd_net -net pl_resetn [get_bd_pins proc_sys_reset/ext_reset_in]\n")
-        self.file.write("connect_bd_net -net axil_rst [get_bd_pins proc_sys_reset/peripheral_reset]\n")
-        self.file.write("connect_bd_net -net axil_arst_n [get_bd_pins proc_sys_reset/peripheral_aresetn]\n")
-        self.file.write("create_bd_port -dir O -type rst axil_rst\n")
-        self.file.write("create_bd_port -dir O -type rst axil_arst_n\n")
-        self.file.write("connect_bd_net -net axil_rst [get_bd_ports axil_rst]\n")
-        self.file.write("connect_bd_net -net axil_arst_n [get_bd_ports axil_arst_n]\n")
-
-
-    def hp_master_ports(self, port):
-        hp = self.config[port] 
-        self.file.write("\n\n##configuration for %s\n"%port)
-        if(hp['use']):
-            self.file.write("set_property -dict [list CONFIG.PSU__USE__M_AXI_GP%i {1}] [get_bd_cells mpsoc] \n"%hp['tcl_index'])
-            self.file.write("set_property -dict [list CONFIG.PSU__MAXIGP%i__DATA_WIDTH {%i}] [get_bd_cells mpsoc] \n"%(hp['tcl_index'],hp["data_width"]))
-            ##connect the clock
-            self.file.write("##connect the clock\n")
-            self.file.write("connect_bd_net -net mpsoc_clk%i [get_bd_pins mpsoc/%s]\n"%(hp['clock'], hp['clock_intf']))
-            ##instantiate the interconnect
-            if(hp['interconnect'] is not None):
-                self.file.write("##creating interconnect\n")
-                self.file.write("create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:* %s \n"%hp['interconnect'])
-                self.file.write("set_property -dict [list CONFIG.NUM_SI {1} CONFIG.NUM_MI {%i}] [get_bd_cells %s]\n"%(len(hp['slaves']), hp['interconnect']))
-                ##connect the clock and rst of the interconnect
-                self.file.write("connect_bd_net -net axil_arst_n [get_bd_pins %s/ARESETN] \n"%hp['interconnect'])
-                self.file.write("connect_bd_net -net mpsoc_clk%i [get_bd_pins %s/ACLK] \n"%(hp['clock'],hp['interconnect']))
-                
-                self.file.write("connect_bd_net -net axil_arst_n [get_bd_pins %s/S00_ARESETN] \n"%hp['interconnect'])
-                self.file.write("connect_bd_net -net mpsoc_clk%i [get_bd_pins %s/S00_ACLK] \n"%(hp['clock'],hp['interconnect']))
-
-                ##set the PS as the master of the interconect
-                self.file.write("connect_bd_intf_net [get_bd_intf_pins mpsoc/M_AXI_%s] -boundary_type upper [get_bd_intf_pins %s/S00_AXI]\n"%(port, hp['interconnect']))
-                #create axil ports
-                axil_addr = hp['base_addr']
-                acc = 0
-                #axil_boundary = axil_addr+4*2**10   ##4kB boundary
-                for i, slave in enumerate(hp['slaves']):
-                    self.file.write("make_bd_intf_pins_external  [get_bd_intf_pins {:}/M{:02d}_AXI]\n".format(hp['interconnect'], i))
-                    #change name of the port
-                    axil_name = port+"_M{:02d}_axil".format(i)
-                    slave['port_name'] = axil_name
-                    self.file.write("set_property name {:} [get_bd_intf_ports M{:02d}_AXI_0]\n".format(axil_name,i))
-                    ##set the protocol of the port
-                    self.file.write("set_property CONFIG.PROTOCOL AXI4LITE [get_bd_intf_ports /{:}]\n".format(axil_name))
-                    ## add this interface to the clock region that it belongs
-                    self.config['mpsoc_clocks']['clock_region'][hp['clock']].append(axil_name)
-                    #connect the master clocks of the interconnect
-                    self.file.write("connect_bd_net -net axil_arst_n [get_bd_pins {:}/M{:02d}_ARESETN] \n".format(hp['interconnect'], i))
-                    self.file.write("connect_bd_net -net mpsoc_clk{:} [get_bd_pins {:}/M{:02d}_ACLK] \n".format(hp['clock'],hp['interconnect'], i))
-                    ##now we set the addresses :O
-                    self.file.write("assign_bd_address [get_bd_addr_segs {%s/Reg }]\n"%axil_name)
-                    #calculate the last addr that should take to check if cross the boundary
-                    warning = (axil_addr)%(2*32*2**10)   ##detect when the current address is in the middle of a 4kB zone
-                    #print(hex(axil_addr)+"  %i    salve_size:%i"%(warning, slave['size']*2**10))
-                    if((warning!=0) and (warning<(slave['size']*2**10))):
-                        ##the current address is in the middle of a 4kb zone and the size of the slave is bigger
-                        axil_addr = axil_addr+warning
-                    self.file.write("set_property range %iK [get_bd_addr_segs {mpsoc/Data/SEG_%s_Reg}]\n"%(slave['size'], axil_name))
-                    self.file.write("set_property offset 0x%X [get_bd_addr_segs {mpsoc/Data/SEG_%s_Reg}]\n"%(axil_addr, axil_name))
-                    axil_addr = axil_addr+slave['size']*2**10
-
-        else:
-            self.file.write("set_property -dict [list CONFIG.PSU__USE__M_AXI_GP%i {0}] [get_bd_cells mpsoc] \n"%hp['tcl_index'])
-
-
-    def hp_slaves(self, port):
-        ##TODO
-        return 1
-
-
+ 
 
 class verilog_generator():
     
@@ -274,14 +114,40 @@ class verilog_generator():
             if(self.config[hp_port]['use']):
                 self.wrapper_file.write("\t//%s signals\n"%hp_port)
                 for slave in self.config[hp_port]['slaves']:
-                    port_name = slave['port_name']
-                    for axi_name, axi_item in self.axi_lite_signals.items():
-                        msg = '\t'+axi_item['dir']+' wire '
-                        if(axi_item['size']>1):
-                            msg+= " [%i:0] "%(axi_item['size']-1)
-                        msg += port_name+axi_name+",\n"
-                        self.wrapper_file.write(msg)
+                    if(slave['type']!='rfdc'):
+                        port_name = slave['port_name']
+                        for axi_name, axi_item in self.axi_lite_signals.items():
+                            msg = '\t'+axi_item['dir']+' wire '
+                            if(axi_item['size']>1):
+                                msg+= " [%i:0] "%(axi_item['size']-1)
+                            msg += port_name+axi_name+",\n"
+                            self.wrapper_file.write(msg)
         #TODO:add the rfdc signals!
+        if(self.config['rfdc']['use']):
+            self.wrapper_file.write("\t//RFDC signals\n")
+            self.wrapper_file.write("\tinput wire rfdc_sysref_n, rfdc_sysref_p,\n")
+            for i, tile in enumerate(self.config['rfdc']['adc_tiles']):
+                if(not tile['use']):
+                    continue
+                self.wrapper_file.write("\t/*tile %i signals\n"%tile['number'])
+                self.wrapper_file.write("\t*sampling_clk:%.3f, refclk:%.3f, output_clk:%.3f \n\t*/\n"%(tile['sampling_rate'], tile['ref_clk'], tile['out_clk']))
+                self.wrapper_file.write("\tinput wire tile%i_clk_n, tile%i_clk_p,\n"%(tile['number'], tile['number']))
+                self.wrapper_file.write("\tinput wire tile%i_axis_input_clk,\n"%tile['number'])
+                if(tile['adc0']['use']):
+                    self.wrapper_file.write("\t//adc physical inputs\n")
+                    self.wrapper_file.write("\tinput wire vin%i_01_n, vin%i_01_p,\n"%(i,i))
+                    self.wrapper_file.write("\toutput wire [%i:0] tile%i_0_tdata,\n "%(tile['adc0']['samples']*16-1, tile['number']))
+                    self.wrapper_file.write("\toutput wire tile%i_0_tvalid,\n "%tile['number'])
+                    self.wrapper_file.write("\tinput wire tile%i_0_tready,\n "%tile['number'])
+                if(tile['adc1']['use']):
+                    self.wrapper_file.write("\t//adc physical inputs\n")
+                    self.wrapper_file.write("\tinput wire vin%i_23_n, vin%i_23_p,\n"%(i,i))
+                    self.wrapper_file.write("\toutput wire [%i:0] tile%i_1_tdata,\n "%(tile['adc1']['samples']*16-1, tile['number']))
+                    self.wrapper_file.write("\toutput wire tile%i_1_tvalid,\n "%tile['number'])
+                    self.wrapper_file.write("\tinput wire tile%i_1_tready,\n "%tile['number'])
+
+
+
         #reset signals
         self.wrapper_file.write("\toutput wire axil_arst_n, axil_rst\n")
         self.wrapper_file.write(");\n")
@@ -412,6 +278,21 @@ class verilog_generator():
                 self.top_file.write("\tinput wire %s\n"%in_msg)
             ##TODO add the syzygy clock signals
         #TODO
+        ###Check the signals!!!
+        if(self.config['rfdc']['use']):
+            self.top_file.write("\t//rfdc signals, check if the signals are ok...\n")
+            self.top_file.write("\tinput wire sysref_in_n, sysref_in_p,\n")
+            for i, tile in enumerate(self.config['rfdc']['adc_tiles']):
+                if(not tile['use']):
+                    continue
+                self.top_file.write("\tinput wire adc%i_clk_n, adc%i_clk_p,\n"%(i,i))
+
+                if(tile['adc0']['use']):
+                    self.top_file.write("\tinput wire vin%i_01_n, vin%i_01_p,\n"%(i,i))
+                
+                if(tile['adc1']['use']):
+                    self.top_file.write("\tinput wire vin%i_23_n, vin%i_23_p,\n"%(i,i))
+
         #if(pins['qsfp']):
         #if(pins['pps'])
 
@@ -430,14 +311,47 @@ class verilog_generator():
             if(self.config[hp_port]['use']):
                 self.top_file.write("//%s signals\n"%hp_port)
                 for slave in self.config[hp_port]['slaves']:
-                    port_name = slave['port_name']
-                    for axi_name, axi_item in self.axi_lite_signals.items():
-                        msg = 'wire '
-                        if(axi_item['size']>1):
-                            msg+= " [%i:0] "%(axi_item['size']-1)
-                        msg += port_name+axi_name+";\n"
-                        self.top_file.write(msg)
+                    if(slave['type']!='rfdc'):
+                        port_name = slave['port_name']
+                        for axi_name, axi_item in self.axi_lite_signals.items():
+                            msg = 'wire '
+                            if(axi_item['size']>1):
+                                msg+= " [%i:0] "%(axi_item['size']-1)
+                            msg += port_name+axi_name+";\n"
+                            self.top_file.write(msg)
         ##TODO: add the rfdc signals
+        if(self.config['rfdc']['use']):
+            self.top_file.write("//rfdc signals\n")
+            for i, tile in enumerate(self.config['rfdc']['adc_tiles']):
+                if(not tile['use']):
+                    continue
+                if(tile['adc0']['use']):
+                    ##check the order!
+                    self.top_file.write("wire signed [15:0] ")
+                    for j in range(tile['adc0']['samples']):
+                        self.top_file.write("tile%i_adc0_%i"%(tile['number'], j))
+                        if(j!=tile['adc1']['samples']-1):
+                            self.top_file.write(", ")
+                        if(j%3==2):
+                            self.top_file.write("\n\t\t\t\t")
+                    self.top_file.write(";\n")
+                    self.top_file.write("wire tile%i_0_tvalid;\n"%tile['number'])
+                if(tile['adc1']['use']):
+                    ##check the order!
+                    self.top_file.write("wire signed [15:0] ")
+                    for j in range(tile['adc1']['samples']):
+                        self.top_file.write("tile%i_adc1_%i"%(tile['number'], j))
+                        if(j!=tile['adc1']['samples']-1):
+                            self.top_file.write(", ")
+                        if(j%3==2):
+                            self.top_file.write("\n\t\t\t\t")
+                    self.top_file.write(";\n")
+                    self.top_file.write("wire tile%i_1_tvalid;\n"%tile['number'])
+                    self.top_file.write("\n")
+        ##TODO:add the DAC signals!
+
+
+
         self.top_file.write("wire axil_arst_n, axil_rst;\n")
         ##create bd_design wrapper
         self.top_file.write("\n\nsystem_wrapper system_wrapper_inst (\n")
@@ -449,13 +363,55 @@ class verilog_generator():
             if(self.config[hp_port]['use']):
                 self.top_file.write("\t//%s signals\n"%hp_port)
                 for slave in self.config[hp_port]['slaves']:
-                    port_name = slave['port_name']
-                    for axi_name, axi_item in self.axi_lite_signals.items():
-                        msg = "\t."+port_name+axi_name+"("+port_name+axi_name+'),\n'
-                        self.top_file.write(msg)
+                    if(slave['type']!='rfdc'):
+                        port_name = slave['port_name']
+                        for axi_name, axi_item in self.axi_lite_signals.items():
+                            msg = "\t."+port_name+axi_name+"("+port_name+axi_name+'),\n'
+                            self.top_file.write(msg)
         ##TODO: rfdc signals
-        self.top_file.write(".axil_rst(axil_rst),\n")
-        self.top_file.write(".axil_arst_n(axil_arst_n)\n")
+        if(self.config['rfdc']['use']):
+            self.top_file.write("\t//rfdc singals\n")
+            self.top_file.write("\t.rfdc_sysref_n(sysref_in_n),\n")
+            self.top_file.write("\t.rfdc_sysref_p(sysref_in_p),\n")
+            for i, tile in enumerate(self.config['rfdc']['adc_tiles']):
+                if(tile['use']):
+                    self.top_file.write("\t//tile%i signals\n"%tile['number'])
+                    self.top_file.write("\t.tile%i_clk_n(),\n"%tile['number'])
+                    self.top_file.write("\t.tile%i_clk_p(),\n"%tile['number'])
+                    self.top_file.write("\t.tile%i_axis_input_clk(),\n"%tile['number'])
+                    if(tile['adc0']['use']):
+                        self.top_file.write("\t.vin%i_01_n(vin%i_01_n),\n"%(i,i))
+                        self.top_file.write("\t.vin%i_01_p(vin%i_01_p),\n"%(i,i))
+                        self.top_file.write("\t//axi-stream adc0 signals\n")
+                        self.top_file.write("\t.tile%i_0_tvalid(tile%i_0_tvalid),\n"%(tile['number'], tile['number'])) 
+                        self.top_file.write("\t.tile%i_0_tready(1'b1),\n"%tile['number'])
+                        self.top_file.write("\t.tile%i_0_tdata({\t"%tile['number'])
+                        for j in range(tile['adc0']['samples']):
+                            self.top_file.write("tile%i_adc0_%i"%(tile['number'], j))
+                            if(j!=tile['adc0']['samples']-1):
+                                self.top_file.write(", ")
+                            if(j==tile['adc0']['samples']//2):
+                                self.top_file.write("\n\t\t\t\t\t\t")
+                        self.top_file.write("}),\n")
+                    if(tile['adc1']['use']):
+                        self.top_file.write("\t.vin%i_23_n(vin%i_23_n),\n"%(i,i))
+                        self.top_file.write("\t.vin%i_23_p(vin%i_23_p),\n"%(i,i))
+                        self.top_file.write("\t//axi-stream adc1 signals\n")
+                        self.top_file.write("\t.tile%i_1_tvalid(tile%i_1_tvalid),\n"%(tile['number'], tile['number'])) 
+                        self.top_file.write("\t.tile%i_1_tready(1'b1),\n"%tile['number'])
+                        self.top_file.write("\t.tile%i_1_tdata({\t"%tile['number'])
+                        for j in range(tile['adc1']['samples']):
+                            self.top_file.write("tile%i_adc1_%i"%(tile['number'], j))
+                            if(j!=tile['adc0']['samples']-1):
+                                self.top_file.write(", ")
+                            if(j==tile['adc1']['samples']//2):
+                                self.top_file.write("\n\t\t\t\t\t\t")
+                        self.top_file.write("}),\n")
+
+
+        
+        self.top_file.write("\t.axil_rst(axil_rst),\n")
+        self.top_file.write("\t.axil_arst_n(axil_arst_n)\n")
         self.top_file.write(");\n")
         
 
@@ -535,9 +491,4 @@ class verilog_generator():
         
          
 
-if __name__ == '__main__':
-    tcl_gen = tcl_generator(mpsoc)
-    config_obj = tcl_gen.config
-    verilog_generator(config_obj)
-    
     
