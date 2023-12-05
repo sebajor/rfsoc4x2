@@ -140,7 +140,7 @@ create_bd_port -dir I -type clk -freq_hz 1228800000 tile224_axis_input_clk
 connect_bd_net [get_bd_pins rfdc/m0_axis_aclk] [get_bd_ports tile224_axis_input_clk]
 create_bd_port -dir O -type clk tile224_data_clk
 connect_bd_net [get_bd_pins rfdc/clk_adc0] [get_bd_ports tile224_data_clk]
-set_property CONFIG.ADC0_Sampling_Rate {1.310720} [get_bd_cells rfdc]
+set_property CONFIG.ADC0_Sampling_Rate {1.966080} [get_bd_cells rfdc]
 set_property CONFIG.ADC0_PLL_Enable {true} [get_bd_cells rfdc]
 set_property CONFIG.ADC0_Refclk_Freq {491.520} [get_bd_cells rfdc]
 set_property CONFIG.ADC0_Outclk_Freq {122.880} [get_bd_cells rfdc]

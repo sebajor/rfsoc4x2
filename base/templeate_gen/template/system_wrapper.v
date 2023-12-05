@@ -85,7 +85,7 @@ module system_wrapper (
 	//RFDC signals
 	input wire rfdc_sysref_n, rfdc_sysref_p,
 	/*tile 224 signals
-	*sampling_clk:1.311, refclk:491.520, output_clk:122.880 
+	*sampling_clk:1.966, refclk:491.520, output_clk:122.880 
 	*/
 	input wire tile224_clk_n, tile224_clk_p,
 	input wire tile224_axis_input_clk,

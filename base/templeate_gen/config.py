@@ -154,7 +154,7 @@ rfdc = {
                 "number":224,
                 "use":True,
                 "pll":True,
-                "sampling_rate":3.93216/3,    #in ghz
+                "sampling_rate":3.93216/2,    #in ghz
                 "ref_clk":491.520,          #mhz
                 "out_clk":245.760/2,          #mhz    
                 "clock_dist":1,

@@ -1,5 +1,6 @@
 *.pyc
 *.del
+base/templeate_gen/template/*
 
 ##this are for vivado buildings
 *.jou
