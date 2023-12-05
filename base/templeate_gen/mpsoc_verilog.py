@@ -133,6 +133,7 @@ class verilog_generator():
                 self.wrapper_file.write("\t*sampling_clk:%.3f, refclk:%.3f, output_clk:%.3f \n\t*/\n"%(tile['sampling_rate'], tile['ref_clk'], tile['out_clk']))
                 self.wrapper_file.write("\tinput wire tile%i_clk_n, tile%i_clk_p,\n"%(tile['number'], tile['number']))
                 self.wrapper_file.write("\tinput wire tile%i_axis_input_clk,\n"%tile['number'])
+                self.wrapper_file.write("\toutput wire tile%i_data_clk,\n"%tile['number'])
                 if(tile['adc0']['use']):
                     self.wrapper_file.write("\t//adc physical inputs\n")
                     self.wrapper_file.write("\tinput wire vin%i_01_n, vin%i_01_p,\n"%(i,i))
@@ -325,6 +326,7 @@ class verilog_generator():
             for i, tile in enumerate(self.config['rfdc']['adc_tiles']):
                 if(not tile['use']):
                     continue
+                self.top_file.write("wire tile%i_data_clk;\n"%tile['number'])
                 if(tile['adc0']['use']):
                     ##check the order!
                     self.top_file.write("wire signed [15:0] ")
@@ -379,6 +381,7 @@ class verilog_generator():
                     self.top_file.write("\t.tile%i_clk_n(),\n"%tile['number'])
                     self.top_file.write("\t.tile%i_clk_p(),\n"%tile['number'])
                     self.top_file.write("\t.tile%i_axis_input_clk(),\n"%tile['number'])
+                    self.top_file.write("\t.tile%i_data_clk(tile%i_data_clk),\n"%(tile['number'], tile['number']))
                     if(tile['adc0']['use']):
                         self.top_file.write("\t.vin%i_01_n(vin%i_01_n),\n"%(i,i))
                         self.top_file.write("\t.vin%i_01_p(vin%i_01_p),\n"%(i,i))

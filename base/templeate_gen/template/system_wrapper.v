@@ -89,6 +89,7 @@ module system_wrapper (
 	*/
 	input wire tile224_clk_n, tile224_clk_p,
 	input wire tile224_axis_input_clk,
+	output wire tile224_data_clk,
 	//adc physical inputs
 	input wire vin0_01_n, vin0_01_p,
 	output wire [127:0] tile224_0_tdata,
@@ -104,6 +105,7 @@ module system_wrapper (
 	*/
 	input wire tile226_clk_n, tile226_clk_p,
 	input wire tile226_axis_input_clk,
+	output wire tile226_data_clk,
 	//adc physical inputs
 	input wire vin2_01_n, vin2_01_p,
 	output wire [127:0] tile226_0_tdata,

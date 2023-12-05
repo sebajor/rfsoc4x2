@@ -95,6 +95,7 @@ wire HPM1_FPD_M01_axil_wready;
 wire  [3:0] HPM1_FPD_M01_axil_wstrb;
 wire HPM1_FPD_M01_axil_wvalid;
 //rfdc signals
+wire tile224_data_clk;
 wire signed [15:0] tile224_adc0_0, tile224_adc0_1, tile224_adc0_2, 
 				tile224_adc0_3, tile224_adc0_4, tile224_adc0_5, 
 				tile224_adc0_6, tile224_adc0_7;
@@ -104,6 +105,7 @@ wire signed [15:0] tile224_adc1_0, tile224_adc1_1, tile224_adc1_2,
 				tile224_adc1_6, tile224_adc1_7;
 wire tile224_1_tvalid;
 
+wire tile226_data_clk;
 wire signed [15:0] tile226_adc0_0, tile226_adc0_1, tile226_adc0_2, 
 				tile226_adc0_3, tile226_adc0_4, tile226_adc0_5, 
 				tile226_adc0_6, tile226_adc0_7;
@@ -203,6 +205,7 @@ system_wrapper system_wrapper_inst (
 	.tile224_clk_n(),
 	.tile224_clk_p(),
 	.tile224_axis_input_clk(),
+	.tile224_data_clk(tile224_data_clk),
 	.vin0_01_n(vin0_01_n),
 	.vin0_01_p(vin0_01_p),
 	//axi-stream adc0 signals
@@ -221,6 +224,7 @@ system_wrapper system_wrapper_inst (
 	.tile226_clk_n(),
 	.tile226_clk_p(),
 	.tile226_axis_input_clk(),
+	.tile226_data_clk(tile226_data_clk),
 	.vin2_01_n(vin2_01_n),
 	.vin2_01_p(vin2_01_p),
 	//axi-stream adc0 signals
