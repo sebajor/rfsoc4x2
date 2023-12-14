@@ -335,7 +335,7 @@ assign r_led[1] = data_valid_r;
 clock_alignment #(
     .ADC_BITS(14),
     .IOSTANDARD("LVDS"),
-    .CLKIN1_PERIOD(10),//2 this is the good value for having 125mhz wiht the configuration
+    .CLKIN1_PERIOD(2),//2 this is the good value for having 125mhz wiht the configuration
     .CLKFBOUT_PHASE(-126)//-126
 ) clock_alignment_inst (
     .data_clock_p(syzygy_p2c_clk_p),
