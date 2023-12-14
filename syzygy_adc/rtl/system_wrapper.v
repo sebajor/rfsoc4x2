@@ -1,4 +1,4 @@
-`default_nettype none
+//default_nettype none
 
 
 // This wrapper is only to simulate, the one used when compiling is generated  by vivado

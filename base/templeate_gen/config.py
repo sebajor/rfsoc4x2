@@ -34,9 +34,29 @@ HPM0_FPD = {
             "reg_numbers":10
             },
             {
-            "size":256,
-            "type":"rfdc"
+            "size":32,      ##kB
+            "type":"bram",   ##register, bram or none
+            "bram_width":32,
+            "bram_addr":10
+            },
+            {
+            "size":32,      ##kB
+            "type":"bram",   ##register, bram or none
+            "bram_width":32,
+            "bram_addr":10
+            },
+            {
+            "size":32,      ##kB
+            "type":"bram",   ##register, bram or none
+            "bram_width":32,
+            "bram_addr":10
             }
+            
+            #{
+            #"size":256,
+            #"type":"rfdc"
+            #},
+
         ],
         "clock":0,          
         "clock_intf": "maxihpm0_fpd_aclk",
@@ -45,7 +65,7 @@ HPM0_FPD = {
 
 
 HPM1_FPD = {
-        "use": True,
+        "use": False,
         "base_addr": 0xB0000000,
         "interconnect": "hpm1_intercon",    ##if None port is connected directly to the output
         "data_width":64,    
@@ -143,7 +163,7 @@ TODO: A good script to check the values before runing the shit in vivado
 """
 
 rfdc = {
-        "use":True,
+        "use":False,
         "axi_master":{"name":"HPM0_FPD",
                       "interconnect":True,
                       "clock":0,
@@ -283,7 +303,7 @@ rfdc = {
 
 ###Physical signals only for the top.v
 physical_pins = {
-        "leds":False,
+        "leds":True,
         "push_buttons":False,
         "slide":False,
         "pmod0":{
@@ -299,8 +319,8 @@ physical_pins = {
             "dir":6*[0]
             },
         "syzygy":{
-            "use":False,
-            "dir_d":8*[0],  ##this are the syzygy_D differntial, but also can be used in single ended
+            "use":True,
+            "dir_d":16*[0],  ##this are the syzygy_D differntial, but also can be used in single ended
             "dir_s":12*[0]  ##this are the syzygy_S
             },
         "QSFO":False,

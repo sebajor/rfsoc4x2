@@ -107,14 +107,16 @@ set_property PACKAGE_PIN AU8 [ get_ports "SYZYGY_S25" ]
 set_property PACKAGE_PIN AV8 [ get_ports "SYZYGY_S27" ]
 
 set_property PACKAGE_PIN AV6 [ get_ports "SYZYGY_P2C_CLK_P" ]
+set_property PACKAGE_PIN AV5 [ get_ports "SYZYGY_P2C_CLK_N" ]
 set_property PACKAGE_PIN B10 [ get_ports "SYZYGY_C2P_CLK_P" ]
+set_property PACKAGE_PIN B9 [ get_ports "SYZYGY_C2P_CLK_N" ]
 
 ## THE IO STANDARD IS DETERMINED BY THE SETTING OF VCCPSYZYGY
 ## SO MODIFY THE LINES BELOW TO REFLECT THE ACTUAL IO STANDARD
 set_property IOSTANDARD LVCMOS18 [ get_ports "SYZYGY_S*"]
 set_property IOSTANDARD LVCMOS18 [ get_ports "SYZYGY_D*"]
-set_property IOSTANDARD LVCMOS18 [ get_ports "SYZYGY_P2C_CLK_P"]
-set_property IOSTANDARD LVCMOS18 [ get_ports "SYZYGY_C2P_CLK_P"]
+set_property IOSTANDARD LVCMOS18 [ get_ports "SYZYGY_P2C_CLK_P"]    ;#inputs clock
+set_property IOSTANDARD LVCMOS18 [ get_ports "SYZYGY_C2P_CLK_P"]    ;#output clock
 
 
 #QSFP

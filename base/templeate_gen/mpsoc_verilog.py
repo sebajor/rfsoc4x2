@@ -277,6 +277,11 @@ class verilog_generator():
                 self.top_file.write("\toutput wire %s\n"%out_msg)
             if(len(in_msg)>0):
                 self.top_file.write("\tinput wire %s\n"%in_msg)
+            self.top_file.write("\tinput wire syzygy_p2c_clk_p,\n")
+            self.top_file.write("\tinput wire syzygy_p2c_clk_n,\n")
+            self.top_file.write("\toutput wire syzygy_c2p_clk_p,\n")
+            self.top_file.write("\toutput wire syzygy_c2p_clk_n,\n")
+
             ##TODO add the syzygy clock signals
         #TODO
         ###Check the signals!!!
