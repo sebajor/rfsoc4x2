@@ -24,7 +24,7 @@ SYN_FILES += rtl/unbalanced_ram.v
 XDC_FILES = fpga.xdc
 XDC_FILES += clocks.xdc
 #IP
-IP_TCL_FILES = ip/bd_design.tcl
+IP_TCL_FILES = ip/mpsoc.tcl
 #IP_TCL_FILES = ip/rfsoc4x2_mpsoc.tcl
 
 
