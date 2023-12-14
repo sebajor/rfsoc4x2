@@ -322,7 +322,7 @@ end
 reg [3:0] bitslipt_count_r=0;
 reg mmcm_locked_r=0;
 reg data_valid_r =0;
-always@(posedge axi_clock) begin
+always@(posedge mpsoc_clk_100) begin
     bitslipt_count_r <= bitslip_count;
     mmcm_locked_r <= mmcm_locked;
     data_valid_r <= clk_align_frame_valid;
@@ -356,9 +356,9 @@ clock_alignment #(
 
 
 
-output wire [15:0] adc0_data, adc1_data;
-output wire [7:0] iserdes0_dout0, iserdes0_dout1,
-                  iserdes1_dout0, iserdes1_dout1;  
+wire [15:0] adc0_data, adc1_data;
+wire [7:0] iserdes0_dout0, iserdes0_dout1,
+            iserdes1_dout0, iserdes1_dout1;  
 
 data_phy data_phy_inst0 (
     .sync_rst(sync_rst),
