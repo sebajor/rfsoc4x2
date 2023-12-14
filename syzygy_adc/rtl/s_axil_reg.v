@@ -206,10 +206,14 @@ always@(*)begin
 end
 
 
+    input wire [3:0] bitslip_count,
+    input wire mmcm_locked,
+    input wire clk_align_frame_valid,
 //write the data into the registers
 //if you want to write into a register you have to add a condition here
 always@(posedge axi_clock)begin
-    if(~write_resp_stall & valid_write_addr & valid_write_data) begin
+    axi_reg[1] <= {mmcm_locked, clk_align_frame_valid, bitslip_count};
+    if((~write_resp_stall & valid_write_addr & valid_write_data)& (waddr!=1)) begin
         if(wstrb[0])
             axi_reg[waddr][7:0] <= wdata[7:0];
         if(wstrb[1])
@@ -232,6 +236,10 @@ always@(posedge axi_clock)begin
 end
 
 //you could make visible some register creating an output port
+
+assign reset= axi_reg[0][0];
+assign enable_adc = axi_reg[0][1];
+assign enable_bram= axi_reg[0][2];
 
 
 endmodule
