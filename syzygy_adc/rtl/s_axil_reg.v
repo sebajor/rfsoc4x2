@@ -206,9 +206,6 @@ always@(*)begin
 end
 
 
-    input wire [3:0] bitslip_count,
-    input wire mmcm_locked,
-    input wire clk_align_frame_valid,
 //write the data into the registers
 //if you want to write into a register you have to add a condition here
 always@(posedge axi_clock)begin

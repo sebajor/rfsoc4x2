@@ -12,7 +12,7 @@
 //`include "output_clock.v"
 //`include "s_axil_reg.v"
 //`include "skid_buffer.v"
-//`include "system_wrapper.v"
+//include "system_wrapper.v"
 //`include "unbalanced_ram.v"
 //`include "xil_primitives.v"
 
@@ -319,11 +319,11 @@ always@(posedge data_clk_div)begin
     sync_rst_buf <= {sync_rst_buf[1:0], reset};
 end
 
-reg [3:0] bitslipt_count_r=0;
+reg [3:0] bitslip_count_r=0;
 reg mmcm_locked_r=0;
 reg data_valid_r =0;
 always@(posedge mpsoc_clk_100) begin
-    bitslipt_count_r <= bitslip_count;
+    bitslip_count_r <= bitslip_count;
     mmcm_locked_r <= mmcm_locked;
     data_valid_r <= clk_align_frame_valid;
 end
